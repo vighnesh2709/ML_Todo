@@ -5,8 +5,11 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from flask import Flask
 import csv
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/<priority>/<finish_date>")
 def testing(priority, finish_date):
