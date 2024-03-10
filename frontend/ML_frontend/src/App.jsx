@@ -1,44 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useState } from 'react';
 import axios from 'axios';
+import './App.css';
 
+function TodoComponent({ tasks }) {
+  return (
+    <div>
+      {tasks.map((task, index) => (
+        <li key={index}>
+          Task: {task.Task}, Finish Date: {task.Finish_Date}, Priority: {task.Priority}
+        </li>
+      ))}
+    </div>
+  );
+}
 
-import './App.css'
+function addTodo(setTasks) {
+  return async () => {
+    let task_1 = document.getElementById('Task').value;
+    let priority = document.getElementById('Priority').value;
+    let date = document.getElementById('Date').value;
+
+    const res = await axios.get(`http://localhost:5000/add_todo/${task_1}/${priority}/${date}/null`);
+    const newTasks = res.data;
+    setTasks(newTasks);
+  };
+}
 
 function App() {
-  const [count, setCount] = useState()
+  const [tasks, setTasks] = useState([]);
 
-  /*return (
-    <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Add_Todo></Add_Todo>}/>
-        </Routes>
-    </BrowserRouter>
-  )*/
-  return(
+  const handleAddTodo = addTodo(setTasks);
+
+  return (
     <div id='main'>
       <div>
         <input id='Task' type='text' placeholder='Task'></input>
         <input id='Priority' type='text' placeholder='Priority'></input>
-        <input id='Date' type='text' placeholder='Data'></input>
-        <button onClick={addTodo}>ADD</button>
+        <input id='Date' type='text' placeholder='Date'></input>
+        <button onClick={handleAddTodo}>ADD</button>
+      </div>
+      <div>
+        <TodoComponent tasks={tasks} />
       </div>
     </div>
-  )
+  );
 }
-async function addTodo(){
-  let Task=document.getElementById('Task').value
-  let Priority=document.getElementById('Priority').value
-  let Date=document.getElementById('Date').value
-  let val;
-  const res=await axios.get(`http://localhost:5000/add_todo/${Task}/${Priority}/${Date}/null`);
-  console.log(res.data);
-  val=res.data
-  console.log(val[0]['Priority']);
-}
-function Complete(){
-  return(<h1>Completed</h1>)
-}
-export default App
+
+export default App;
