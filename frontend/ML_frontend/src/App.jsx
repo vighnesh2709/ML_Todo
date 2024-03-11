@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
 function TodoComponent({ tasks }) {
-  return (
-    <div>
-      {tasks.map((task, index) => (
-        <li key={index}>
-          Task: {task.Task}, Finish Date: {task.Finish_Date}, Priority: {task.Priority}
-        </li>
-      ))}
-    </div>
-  );
+  useEffect(()=>{
+    console.log(tasks)
+  },[tasks])
+
+   return (
+      <div>
+        {tasks.map((task, index) => (
+          <div key={index} id={task.ID}>
+            ID:{task.ID} Task: {task.Task}, Finish Date: {task.Finish_Date}, Priority: {task.Priority}
+            <button onClick={()=>{completed(task.ID,task.Task,task.Finish_Date)}}>completed</button>
+          </div>
+        ))}
+      </div>
+    );
+  
+}
+
+function completed(id,Task,Date){
+  console.log(id)
+  console.log(Task)
+  console.log(Date)
+  axios.get(`http://localhost:5000/completed/${Task}/${Date}/${id}`)
+  .then((res)=>{
+    console.log(res.date)
+  })
+  
 }
 
 function addTodo(setTasks) {
@@ -30,6 +47,16 @@ function App() {
   const [tasks, setTasks] = useState([]);
 
   const handleAddTodo = addTodo(setTasks);
+
+  useEffect(() => {
+    
+    const fetchTasks = async () => {
+      const res = await axios.get('http://localhost:5000/get_tasks');
+      setTasks(res.data);
+    };
+
+    fetchTasks();
+  }, []); 
 
   return (
     <div id='main'>

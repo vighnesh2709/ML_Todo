@@ -10,6 +10,18 @@ import json
 
 app = Flask(__name__)
 CORS(app)
+@app.route("/get_tasks")
+def Landing():
+    file_path = '/home/vighnesh/Desktop/ML_Todo/backend/TestData - Sheet1.csv'
+    df = pd.read_csv(file_path)
+    nan_rows = df[df["Completed"].isnull()]
+    json_result = nan_rows.to_json(orient='records')
+    json_object = json.loads(json_result)
+
+    return jsonify(json_object)
+
+
+
 @app.route("/<priority_input>/<finish_date>")
 def testing(priority_input, finish_date):
     # Load the data
@@ -82,23 +94,33 @@ def testing(priority_input, finish_date):
 
     print(f"The predicted value is {predicted_value_str}")
 
-    return f"<h1>The predicted value is {predicted_value_str}</h1>"
+    return (f"<h1>{predicted_value_str}<h1>")
 
 
-@app.route("/add_todo/<task>/<priority>/<finish_Date>/<completed>")
-def add_todo(task, priority, finish_Date, completed):
+
+@app.route("/add_todo/<task>/<priority_input>/<finish_Date>/<completed>")
+def add_todo(task, priority_input, finish_Date, completed):
     try:
         completed = None if completed.lower() == 'null' else completed
 
-        # Ensure file_path is correct without leading whitespace
         file_path = '/home/vighnesh/Desktop/ML_Todo/backend/TestData - Sheet1.csv'
 
-        new_data = [task, finish_Date, priority, completed]
+        if priority_input == 'low':
+            priority = 0
+        elif priority_input == 'medium':
+            priority = 1
+        else:
+            priority = 2
+
+        df = pd.read_csv(file_path)
+
+        id = len(df) + 1
+
+        new_data = [id, task, finish_Date, priority, completed]
         with open(file_path, 'a', newline='') as file:
             csv_writer = csv.writer(file)
             csv_writer.writerow(new_data)
 
-        df = pd.read_csv(file_path)
         nan_rows = df[df["Completed"].isnull()]
         json_result = nan_rows.to_json(orient='records')
         json_object = json.loads(json_result)
@@ -108,5 +130,39 @@ def add_todo(task, priority, finish_Date, completed):
         app.logger.error(f"Error in add_todo route: {e}")
         return jsonify({"error": "Internal Server Error"}), 500
 
+from flask import jsonify
+
+@app.route("/completed/<Task>/<Date>/<id>")
+def Completed(Task, Date, id):
+    file_path = '/home/vighnesh/Desktop/ML_Todo/backend/TestData - Sheet1.csv'
+    df = pd.read_csv(file_path)
+
+    # Convert 'id' to an integer
+    id = int(id) - 1
+
+    if 0 <= id < len(df):
+        if (df.loc[id, "Task"] == Task) and (df.loc[id, "Finish_Date"] == Date):
+            # Update the "Completed" column value to 1 using loc
+            df.loc[id, "Completed"] = 1
+
+            # Print the updated DataFrame for debugging
+            print(df)
+
+            # Save the updated DataFrame back to the CSV file
+            df.to_csv(file_path, index=False)
+
+            # Return a JSON response with the updated row
+            updated_row = df.loc[id].to_dict()
+            return jsonify({"message": "Data updated successfully", "updated_row": updated_row})
+        else:
+            # If the conditions are not met, return an error message
+            return jsonify({"error": "Invalid Task or Date"})
+    else:
+        # If the index is out of bounds, return an error message
+        return jsonify({"error": "Invalid index"})
+
+
+
 if __name__ == "__main__":
     app.run(debug=True)
+
