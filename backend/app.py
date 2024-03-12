@@ -98,7 +98,7 @@ def testing(priority_input, finish_date):
 
 
 
-@app.route("/add_todo/<task>/<priority_input>/<finish_Date>/<completed>")
+@app.route("/add_todo/<task>/<priority_input>/<finish_Date>/<completed>",methods=['POST'])
 def add_todo(task, priority_input, finish_Date, completed):
     try:
         completed = None if completed.lower() == 'null' else completed
@@ -120,7 +120,9 @@ def add_todo(task, priority_input, finish_Date, completed):
         with open(file_path, 'a', newline='') as file:
             csv_writer = csv.writer(file)
             csv_writer.writerow(new_data)
-
+    except Exception as e:
+        print({e})
+        '''
         nan_rows = df[df["Completed"].isnull()]
         json_result = nan_rows.to_json(orient='records')
         json_object = json.loads(json_result)
@@ -128,9 +130,8 @@ def add_todo(task, priority_input, finish_Date, completed):
         return jsonify(json_object)
     except Exception as e:
         app.logger.error(f"Error in add_todo route: {e}")
-        return jsonify({"error": "Internal Server Error"}), 500
+        return jsonify({"error": "Internal Server Error"}), 500'''
 
-from flask import jsonify
 
 @app.route("/completed/<Task>/<Date>/<id>")
 def Completed(Task, Date, id):
@@ -145,21 +146,21 @@ def Completed(Task, Date, id):
             # Update the "Completed" column value to 1 using loc
             df.loc[id, "Completed"] = 1
 
-            # Print the updated DataFrame for debugging
-            print(df)
-
             # Save the updated DataFrame back to the CSV file
-            df.to_csv(file_path, index=False)
+            try:
+                df.to_csv(file_path, index=False)
+            except Exception as e:
+                return jsonify({"error": f"Failed to write to CSV file: {e}"}), 500  # 500 Internal Server Error
 
             # Return a JSON response with the updated row
             updated_row = df.loc[id].to_dict()
             return jsonify({"message": "Data updated successfully", "updated_row": updated_row})
         else:
             # If the conditions are not met, return an error message
-            return jsonify({"error": "Invalid Task or Date"})
+            return jsonify({"error": "Invalid Task or Date"}), 400  # 400 Bad Request
     else:
         # If the index is out of bounds, return an error message
-        return jsonify({"error": "Invalid index"})
+        return jsonify({"error": "Invalid index"}), 400  # 400 Bad Request
 
 
 

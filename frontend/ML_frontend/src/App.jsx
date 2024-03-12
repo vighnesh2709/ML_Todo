@@ -2,33 +2,33 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
 
-function TodoComponent({ tasks }) {
-  useEffect(()=>{
-    console.log(tasks)
-  },[tasks])
+function TodoComponent({ tasks, setTasks }) {
+  useEffect(() => {
+    console.log(tasks);
+  }, [tasks]);
 
-   return (
-      <div>
-        {tasks.map((task, index) => (
-          <div key={index} id={task.ID}>
-            ID:{task.ID} Task: {task.Task}, Finish Date: {task.Finish_Date}, Priority: {task.Priority}
-            <button onClick={()=>{completed(task.ID,task.Task,task.Finish_Date)}}>completed</button>
-          </div>
-        ))}
-      </div>
-    );
-  
+  return (
+    <div>
+      {tasks.map((task, index) => (
+        <div key={index} id={task.ID}>
+          ID:{task.ID} Task: {task.Task}, Finish Date: {task.Finish_Date}, Priority: {task.Priority}
+          <button onClick={() => completed(task.ID, task.Task, task.Finish_Date, setTasks)}>completed</button>
+        </div>
+      ))}
+    </div>
+  );
 }
 
-function completed(id,Task,Date){
-  console.log(id)
-  console.log(Task)
-  console.log(Date)
-  axios.get(`http://localhost:5000/completed/${Task}/${Date}/${id}`)
-  .then((res)=>{
-    console.log(res.date)
-  })
-  
+async function completed(id, Task, Date, setTasks) {
+  console.log(id);
+  console.log(Task);
+  console.log(Date);
+  try {
+    await axios.get(`http://localhost:5000/completed/${Task}/${Date}/${id}`);
+    // No need to setTasks here
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function addTodo(setTasks) {
@@ -37,9 +37,13 @@ function addTodo(setTasks) {
     let priority = document.getElementById('Priority').value;
     let date = document.getElementById('Date').value;
 
-    const res = await axios.get(`http://localhost:5000/add_todo/${task_1}/${priority}/${date}/null`);
-    const newTasks = res.data;
-    setTasks(newTasks);
+    try {
+      const res = await axios.post(`http://localhost:5000/add_todo/${task_1}/${priority}/${date}/null`);
+      const newTasks = res.data;
+      setTasks(newTasks);
+    } catch (error) {
+      console.error(error);
+    }
   };
 }
 
@@ -49,14 +53,31 @@ function App() {
   const handleAddTodo = addTodo(setTasks);
 
   useEffect(() => {
-    
     const fetchTasks = async () => {
-      const res = await axios.get('http://localhost:5000/get_tasks');
-      setTasks(res.data);
+      try {
+        const res = await axios.get('http://localhost:5000/get_tasks');
+        setTasks(res.data);
+      } catch (error) {
+        console.error(error);
+      }
     };
 
     fetchTasks();
-  }, []); 
+  }, []);
+
+  useEffect(() => {
+    const fetchUpdatedTasks = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/get_tasks');
+        setTasks(res.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    // Use this effect to update tasks when setTasks is called
+    fetchUpdatedTasks();
+  }, [tasks]);
 
   return (
     <div id='main'>
@@ -67,7 +88,7 @@ function App() {
         <button onClick={handleAddTodo}>ADD</button>
       </div>
       <div>
-        <TodoComponent tasks={tasks} />
+        <TodoComponent tasks={tasks} setTasks={setTasks} />
       </div>
     </div>
   );
