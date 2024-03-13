@@ -11,27 +11,26 @@ function TodoComponent({ tasks, setTasks }) {
     <div>
       {tasks.map((task, index) => (
         <div key={index} id={task.ID}>
-          ID:{task.ID} Task: {task.Task}, Finish Date: {task.Finish_Date}, Priority: {task.Priority}
-          <button onClick={() => completed(task.ID, task.Task, task.Finish_Date, setTasks)}>completed</button>
+          ID: {task.ID}, Task: {task.Task}, Finish Date: {task.Finish_Date}, Priority: {task.Priority} pred:{task.Prediction}
+          <button onClick={() => completed(task.ID, task.Task, task.Finish_Date)}>completed</button> 
         </div>
       ))}
     </div>
   );
 }
 
-async function completed(id, Task, Date, setTasks) {
+async function completed(id, Task, Date) {
   console.log(id);
   console.log(Task);
   console.log(Date);
   try {
     await axios.get(`http://localhost:5000/completed/${Task}/${Date}/${id}`);
-    // No need to setTasks here
   } catch (error) {
     console.error(error);
   }
 }
 
-function addTodo(setTasks) {
+function addTodo(setTasks, tasks) {
   return async () => {
     let task_1 = document.getElementById('Task').value;
     let priority = document.getElementById('Priority').value;
@@ -39,8 +38,8 @@ function addTodo(setTasks) {
 
     try {
       const res = await axios.post(`http://localhost:5000/add_todo/${task_1}/${priority}/${date}/null`);
-      const newTasks = res.data;
-      setTasks(newTasks);
+      const pred = await axios.get(`http://localhost:5000/${priority}/${date}`);
+      const pred_value = pred.data; 
     } catch (error) {
       console.error(error);
     }
@@ -50,7 +49,7 @@ function addTodo(setTasks) {
 function App() {
   const [tasks, setTasks] = useState([]);
 
-  const handleAddTodo = addTodo(setTasks);
+  const handleAddTodo = addTodo(setTasks, tasks);
 
   useEffect(() => {
     const fetchTasks = async () => {

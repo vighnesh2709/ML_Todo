@@ -22,7 +22,6 @@ def Landing():
 
 
 
-@app.route("/<priority_input>/<finish_date>")
 def testing(priority_input, finish_date):
     # Load the data
     file_path = '/home/vighnesh/Desktop/ML_Todo/backend/TestData - Sheet1.csv'
@@ -94,7 +93,7 @@ def testing(priority_input, finish_date):
 
     print(f"The predicted value is {predicted_value_str}")
 
-    return (f"<h1>{predicted_value_str}<h1>")
+    return (predicted_value_str)
 
 
 
@@ -116,7 +115,9 @@ def add_todo(task, priority_input, finish_Date, completed):
 
         id = len(df) + 1
 
-        new_data = [id, task, finish_Date, priority, completed]
+        prediction=testing(priority_input,finish_Date)
+
+        new_data = [id, task, finish_Date, priority, completed,prediction]
         with open(file_path, 'a', newline='') as file:
             csv_writer = csv.writer(file)
             csv_writer.writerow(new_data)
